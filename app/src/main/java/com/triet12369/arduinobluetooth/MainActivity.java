@@ -105,7 +105,7 @@ public class MainActivity extends Activity
         {
             for(BluetoothDevice device : pairedDevices)
             {
-                if(device.getName().equals("MattsBlueTooth"))
+                if(device.getName().equals("HC-05"))
                 {
                     mmDevice = device;
                     break;
