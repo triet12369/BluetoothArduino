@@ -7,18 +7,28 @@ import android.bluetooth.BluetoothSocket;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.EditText;
 import android.widget.Button;
+
+import com.jjoe64.graphview.GraphView;
+import com.jjoe64.graphview.Viewport;
+import com.jjoe64.graphview.series.BarGraphSeries;
+import com.jjoe64.graphview.series.DataPoint;
+import com.jjoe64.graphview.series.DataPointInterface;
+import com.jjoe64.graphview.series.LineGraphSeries;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Random;
 import java.util.Set;
 import java.util.UUID;
 
 
-public class MainActivity extends Activity
+public class MainActivity extends AppCompatActivity
 {
     TextView myLabel;
     EditText myTextbox;
@@ -32,6 +42,9 @@ public class MainActivity extends Activity
     int readBufferPosition;
     int counter;
     volatile boolean stopWorker;
+    private LineGraphSeries<DataPoint> series;
+    private static final Random RANDOM = new Random();
+    private int lastX = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState)
@@ -84,8 +97,52 @@ public class MainActivity extends Activity
                 catch (IOException ex) { }
             }
         });
+        // Graph instance
+        GraphView graph = (GraphView) findViewById(R.id.graph);
+        series = new LineGraphSeries<DataPoint>();
+        // data
+        graph.addSeries(series);
+        // viewport customization
+        Viewport viewport = graph.getViewport();
+        viewport.setXAxisBoundsManual(true);
+        viewport.setMinX(0);
+        viewport.setMaxX(5);
+        viewport.setYAxisBoundsManual(true);
+        viewport.setMinY(0);
+        viewport.setMaxY(10);
+        viewport.setScrollable(true);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // simulate realtime
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                // add 100 entries
+                for (int i = 0; i < 100; i++) {
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            addEntry();
+                        }
+                    });
+                    try {
+                        Thread.sleep(100);
+                    }
+                    catch (InterruptedException e) {
+
+                    }
+                }
+            }
+        }).start();
+    }
+
+    // add data to graph
+    private void addEntry() {
+        series.appendData(new DataPoint(lastX++, Math.sin(lastX*Math.PI/12) * 2d + 2), true, 10);
+    }
     void findBT()
     {
         mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
